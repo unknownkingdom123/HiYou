@@ -75,7 +75,7 @@ export const insertSessionSchema = createInsertSchema(sessions).omit({ id: true 
 // Signup schema with validation
 export const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
-  username: z.string().min(3, "MIS NO. must be at least 3 characters"),
+  username: z.string().regex(/^\d{9}$/, "MIS NO. must be exactly 9 digits"),
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),

@@ -339,7 +339,7 @@ export default function Signup() {
                   </Button>
                   <Button
                     type="button"
-                    variant="link"
+                    variant="ghost"
                     onClick={resendOTP}
                     disabled={isLoading}
                     data-testid="button-resend-otp"
