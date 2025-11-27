@@ -77,11 +77,11 @@ export class MemStorage implements IStorage {
   }
 
   private async createDefaultAdmin() {
-    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const hashedPassword = await bcrypt.hash("Avishkar2007", 10);
     const admin: User = {
       id: randomUUID(),
       email: "admin@clgbooks.com",
-      username: "admin",
+      username: "Avishkar",
       mobile: "+911234567890",
       password: hashedPassword,
       isVerified: true,
