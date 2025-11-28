@@ -134,6 +134,7 @@ export type ChatMessage = {
   content: string;
   pdfResults?: Pdf[];
   externalLink?: ExternalLink;
+  externalLinks?: ExternalLink[];
 };
 
 // Download with PDF info

@@ -94,12 +94,11 @@ export async function registerRoutes(
   // Signup
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const { email, username, mobile, password } = req.body;
+      const { username, mobile, password } = req.body;
 
-      // Check if user exists
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already registered" });
+      // Validation
+      if (!username || !mobile || !password) {
+        return res.status(400).json({ message: "Username, mobile, and password are required" });
       }
 
       const existingUsername = await storage.getUserByUsername(username);
@@ -115,35 +114,24 @@ export async function registerRoutes(
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user (unverified)
+      // Create user (verified immediately, no OTP needed)
       const user = await storage.createUser({
-        email,
+        email: null,
         username,
         mobile,
         password: hashedPassword,
-        isVerified: false,
+        isVerified: true,
         isAdmin: false,
       });
 
-      // Generate OTP
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-      await storage.createOtp({
-        userId: user.id,
-        mobile,
-        code: otp,
-        type: "signup",
-        expiresAt,
-      });
-
-      // In production, send OTP via SMS
-      console.log(`[DEV] OTP for ${mobile}: ${otp}`);
-
       res.status(201).json({ 
-        message: "Signup successful. Please verify your mobile number.",
-        // In development, return OTP for testing
-        devOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
+        message: "Account created successfully. Please sign in.",
+        user: {
+          id: user.id,
+          username: user.username,
+          mobile: user.mobile,
+          isAdmin: user.isAdmin,
+        },
       });
     } catch (error) {
       console.error("Signup error:", error);
@@ -238,10 +226,6 @@ export async function registerRoutes(
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      if (!user.isVerified && !user.isAdmin) {
-        return res.status(401).json({ message: "Please verify your account first" });
       }
 
       // Generate JWT
@@ -381,11 +365,13 @@ export async function registerRoutes(
   app.post("/api/chat", authMiddleware, async (req, res) => {
     try {
       const { message } = req.body;
+      const userId = (req as any).userId;
 
-      // Get all PDFs for fuzzy search
+      // Get all PDFs and external links
       const allPdfs = await storage.getAllPdfs();
+      const allLinks = await storage.getAllExternalLinks();
 
-      // Configure Fuse.js for fuzzy search
+      // Configure Fuse.js for fuzzy search on PDFs
       const fuse = new Fuse(allPdfs, {
         keys: [
           { name: "title", weight: 0.4 },
@@ -394,41 +380,45 @@ export async function registerRoutes(
           { name: "description", weight: 0.1 },
           { name: "tags", weight: 0.1 },
         ],
-        threshold: 0.4, // Lower = stricter matching
+        threshold: 0.4,
         includeScore: true,
       });
 
       // Search for PDFs
-      const results = fuse.search(message);
+      const pdfResults = fuse.search(message);
+      const topPdfs = pdfResults.slice(0, 3).map((r) => r.item);
 
-      if (results.length === 0) {
-        // Try to find external link
-        const externalLink = await storage.searchExternalLinks(message);
+      // Search for external links
+      const linkResults = allLinks.filter((link) =>
+        link.title.toLowerCase().includes(message.toLowerCase()) ||
+        link.description?.toLowerCase().includes(message.toLowerCase())
+      );
+      const topLinks = linkResults.slice(0, 3);
 
-        if (externalLink) {
-          return res.json({
-            message: `I couldn't find a PDF in our library, but here's an external resource that might help:`,
-            pdfs: [],
-            externalLink,
-          });
-        }
+      // Log search
+      await storage.logUserDownload(userId, `search: ${message}`);
 
-        return res.json({
-          message: "I couldn't find any matching books in our library. Try different keywords or ask for a specific subject.",
-          pdfs: [],
-        });
+      // Build response message
+      let responseMessage = "";
+      if (topPdfs.length === 0 && topLinks.length === 0) {
+        responseMessage = "I couldn't find any matching resources. Try different keywords or ask for a specific subject.";
+      } else if (topPdfs.length > 0 && topLinks.length === 0) {
+        responseMessage = topPdfs.length === 1
+          ? "I found a perfect match for you!"
+          : `I found ${topPdfs.length} matching books:`;
+      } else if (topPdfs.length === 0 && topLinks.length > 0) {
+        responseMessage = topLinks.length === 1
+          ? "I found an external resource for you:"
+          : `I found ${topLinks.length} external resources:`;
+      } else {
+        responseMessage = `I found ${topPdfs.length} books and ${topLinks.length} external resources:`;
       }
-
-      // Get top 3 results
-      const topResults = results.slice(0, 3).map((r) => r.item);
-
-      const responseMessage = results.length === 1
-        ? `I found the perfect match for you!`
-        : `I found ${results.length} matching books. Here are the best matches:`;
 
       res.json({
         message: responseMessage,
-        pdfs: topResults,
+        pdfs: topPdfs,
+        externalLinks: topLinks,
+        totalResults: topPdfs.length + topLinks.length,
       });
     } catch (error) {
       console.error("Chat error:", error);
@@ -474,7 +464,7 @@ export async function registerRoutes(
   });
 
   // Get PDF file
-  app.get("/api/pdfs/:id/file", async (req, res) => {
+  app.get("/api/pdfs/:id/file", authMiddleware, async (req, res) => {
     try {
       const pdf = await storage.getPdf(req.params.id);
       if (!pdf) {
@@ -483,17 +473,36 @@ export async function registerRoutes(
 
       const filePath = path.join(uploadsDir, pdf.filename);
       
-      // For demo, send a placeholder if file doesn't exist
+      // Check if file exists
       if (!fs.existsSync(filePath)) {
-        return res.json({ 
-          message: "Demo mode - file would be downloaded",
-          title: pdf.title,
-        });
+        return res.status(404).json({ message: "File not found" });
       }
 
-      res.download(filePath, `${pdf.title}.pdf`);
+      // Get file size
+      const fileSize = fs.statSync(filePath).size;
+
+      // Set headers for download
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${pdf.title}.pdf"`);
+      res.setHeader("Content-Length", fileSize);
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+
+      fileStream.on("error", (error) => {
+        console.error("File stream error:", error);
+        if (!res.headersSent) {
+          res.status(500).json({ message: "Failed to download file" });
+        }
+      });
+
+      res.on("finish", () => {
+        console.log(`Downloaded: ${pdf.title} by user ${req.user?.id}`);
+      });
     } catch (error) {
-      console.error("Get PDF file error:", error);
+      console.error("Download error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

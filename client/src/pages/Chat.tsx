@@ -73,7 +73,7 @@ export default function Chat() {
         role: "bot",
         content: result.message,
         pdfResults: result.pdfs,
-        externalLink: result.externalLink,
+        externalLinks: result.externalLinks,
       };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -253,7 +253,42 @@ export default function Chat() {
                       </div>
                     )}
 
-                    {/* External Link */}
+                    {/* External Links */}
+                    {message.externalLinks && message.externalLinks.length > 0 && (
+                      <div className="space-y-2">
+                        {message.externalLinks.map((link) => (
+                          <Card key={link.id}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <ExternalLink className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-sm line-clamp-2">
+                                    {link.title}
+                                  </h4>
+                                  {link.description && (
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                      {link.description}
+                                    </p>
+                                  )}
+                                  <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-primary hover:underline mt-2 inline-flex items-center gap-1"
+                                    data-testid={`link-external-${link.id}`}
+                                  >
+                                    Open Link
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Single External Link (for compatibility) */}
                     {message.externalLink && (
                       <Card>
                         <CardContent className="p-4">
