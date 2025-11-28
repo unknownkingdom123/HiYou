@@ -162,7 +162,10 @@ export default function ForgotPassword() {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, method }),
+        body: JSON.stringify({ 
+          identifier, 
+          method 
+        }),
       });
 
       if (!response.ok) {
@@ -311,7 +314,7 @@ export default function ForgotPassword() {
                   </Button>
                   <Button
                     type="button"
-                    variant="link"
+                    variant="ghost"
                     onClick={resendOTP}
                     disabled={isLoading}
                     data-testid="button-resend-otp"

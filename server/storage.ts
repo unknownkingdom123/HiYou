@@ -211,6 +211,9 @@ export class MemStorage implements IStorage {
     const otp: Otp = { 
       ...insertOtp, 
       id,
+      email: insertOtp.email || null,
+      mobile: insertOtp.mobile || null,
+      userId: insertOtp.userId || null,
       isUsed: false,
     };
     this.otps.set(id, otp);
@@ -249,11 +252,13 @@ export class MemStorage implements IStorage {
 
   async deleteExpiredOtps(): Promise<void> {
     const now = new Date();
-    for (const [id, otp] of this.otps) {
+    const idsToDelete: string[] = [];
+    for (const [id, otp] of Array.from(this.otps.entries())) {
       if (new Date(otp.expiresAt) < now) {
-        this.otps.delete(id);
+        idsToDelete.push(id);
       }
     }
+    idsToDelete.forEach(id => this.otps.delete(id));
   }
 
   // Sessions
@@ -277,11 +282,13 @@ export class MemStorage implements IStorage {
   }
 
   async deleteUserSessions(userId: string): Promise<void> {
-    for (const [token, session] of this.sessions) {
+    const tokensToDelete: string[] = [];
+    for (const [token, session] of Array.from(this.sessions.entries())) {
       if (session.userId === userId) {
-        this.sessions.delete(token);
+        tokensToDelete.push(token);
       }
     }
+    tokensToDelete.forEach(token => this.sessions.delete(token));
   }
 
   // PDFs
@@ -298,6 +305,11 @@ export class MemStorage implements IStorage {
     const pdf: Pdf = {
       ...insertPdf,
       id,
+      description: insertPdf.description || null,
+      author: insertPdf.author || null,
+      category: insertPdf.category || null,
+      tags: insertPdf.tags || null,
+      fileSize: insertPdf.fileSize || null,
       uploadedAt: new Date(),
     };
     this.pdfs.set(id, pdf);
@@ -332,7 +344,11 @@ export class MemStorage implements IStorage {
 
   async createExternalLink(insertLink: InsertExternalLink): Promise<ExternalLink> {
     const id = randomUUID();
-    const link: ExternalLink = { ...insertLink, id };
+    const link: ExternalLink = { 
+      ...insertLink, 
+      id,
+      description: insertLink.description || null,
+    };
     this.externalLinks.set(id, link);
     return link;
   }

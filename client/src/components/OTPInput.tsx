@@ -13,11 +13,10 @@ export function OTPInput({ length = 6, value, onChange, disabled }: OTPInputProp
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    // Initialize from value prop
-    if (value) {
-      const valueArray = value.split("").slice(0, length);
-      setOtp([...valueArray, ...Array(length - valueArray.length).fill("")]);
-    }
+    // Sync with value prop changes
+    const valueArray = value.split("").slice(0, length);
+    const newOtp = [...valueArray, ...Array(Math.max(0, length - valueArray.length)).fill("")];
+    setOtp(newOtp);
   }, [value, length]);
 
   const handleChange = (index: number, digit: string) => {

@@ -93,6 +93,7 @@ export default function Signup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mobile: signupData?.mobile,
+          email: signupData?.email,
           code: otpValue,
           type: "signup",
         }),
@@ -135,6 +136,7 @@ export default function Signup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mobile: signupData.mobile,
+          email: signupData.email,
           type: "signup",
         }),
       });

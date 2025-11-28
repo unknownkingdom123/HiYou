@@ -154,9 +154,15 @@ export async function registerRoutes(
   // Verify OTP (Signup)
   app.post("/api/auth/verify-otp", async (req, res) => {
     try {
-      const { mobile, code, type } = req.body;
+      const { mobile, email, code, type } = req.body;
 
-      const otp = await storage.getOtpByMobileAndCode(mobile, code, type);
+      let otp;
+      if (mobile) {
+        otp = await storage.getOtpByMobileAndCode(mobile, code, type);
+      } else if (email) {
+        otp = await storage.getOtpByEmailAndCode(email, code, type);
+      }
+
       if (!otp) {
         return res.status(400).json({ message: "Invalid or expired OTP" });
       }
@@ -179,9 +185,17 @@ export async function registerRoutes(
   // Resend OTP
   app.post("/api/auth/resend-otp", async (req, res) => {
     try {
-      const { mobile, type } = req.body;
+      const { mobile, email, type } = req.body;
 
-      const user = await storage.getUserByMobile(mobile);
+      let user;
+      let identifier = mobile || email;
+      
+      if (mobile) {
+        user = await storage.getUserByMobile(mobile);
+      } else if (email) {
+        user = await storage.getUserByEmail(email);
+      }
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -192,13 +206,14 @@ export async function registerRoutes(
 
       await storage.createOtp({
         userId: user.id,
-        mobile,
+        mobile: mobile || undefined,
+        email: email || undefined,
         code: otp,
         type,
         expiresAt,
       });
 
-      console.log(`[DEV] Resent OTP for ${mobile}: ${otp}`);
+      console.log(`[DEV] Resent OTP for ${identifier}: ${otp}`);
 
       res.json({ 
         message: "OTP sent successfully",
