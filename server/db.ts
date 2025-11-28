@@ -6,14 +6,19 @@ let db: any = null;
 
 export async function testDatabaseConnection() {
   try {
-    // If no DATABASE_URL, use in-memory storage
-    if (!process.env.DATABASE_URL) {
+    // Check for DATABASE_URL
+    const dbUrl = process.env.DATABASE_URL;
+    
+    if (!dbUrl) {
       console.log("✓ No DATABASE_URL provided - using in-memory storage");
+      console.log(`  Available env vars: ${Object.keys(process.env).filter(k => k.includes('DB') || k.includes('data') || k.includes('url')).join(', ') || 'none matching'}`);
       return true;
     }
 
+    console.log("🔄 Attempting to connect to PostgreSQL...");
+    
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: dbUrl,
       ssl: {
         rejectUnauthorized: false,
       },
@@ -34,7 +39,7 @@ export async function testDatabaseConnection() {
     return true;
   } catch (error) {
     console.log("⚠ Database connection failed, using in-memory storage");
-    console.error("Database error:", error instanceof Error ? error.message : error);
+    console.error("  Error:", error instanceof Error ? error.message : String(error));
     return false;
   }
 }
