@@ -1071,7 +1071,7 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <p className="text-3xl font-bold">{selectedUser.totalDownloads || 0}</p>
