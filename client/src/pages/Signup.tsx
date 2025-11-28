@@ -17,7 +17,8 @@ import { type LoginData } from "@shared/schema";
 import { z } from "zod";
 
 const signupSchema = z.object({
-  username: z.string().min(1, "MIS NO. is required"),
+  misNo: z.string().min(7, "MIS NO. must be at least 7 digits").regex(/^\d+$/, "MIS NO. must contain only digits"),
+  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens"),
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
@@ -35,6 +36,7 @@ export default function Signup() {
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+      misNo: "",
       username: "",
       mobile: "",
       password: "",
@@ -110,16 +112,38 @@ export default function Signup() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="misNo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username (MIS NO.)</FormLabel>
+                      <FormLabel>MIS No. (Registration Number)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input 
-                            placeholder="Enter your MIS number (e.g., 6125xxxxx)" 
+                            placeholder="e.g., 6125xxxxx" 
                             className="pl-10 font-mono"
+                            data-testid="input-mis-no"
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="Choose a username" 
+                            className="pl-10"
                             data-testid="input-username"
                             {...field} 
                           />

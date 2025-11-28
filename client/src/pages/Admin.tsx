@@ -54,6 +54,7 @@ export default function Admin() {
   const [deleteLinkId, setDeleteLinkId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [linksSearchQuery, setLinksSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const { user, logout, isLoading: authLoading } = useAuth();
@@ -79,6 +80,16 @@ export default function Admin() {
 
   const { data: users, isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const token = localStorage.getItem("clgbooks-token");
+      const response = await fetch("/api/admin/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch users");
+      return response.json();
+    },
     enabled: !!user?.isAdmin,
   });
 
@@ -604,9 +615,21 @@ export default function Admin() {
           {/* External Links Tab */}
           {activeTab === "links" && (
             <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-bold">External Links</h1>
-                <p className="text-muted-foreground">Add alternative book sources</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold">External Links</h1>
+                  <p className="text-muted-foreground">Add alternative book sources ({links?.length || 0} total)</p>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search links..."
+                    value={linksSearchQuery}
+                    onChange={(e) => setLinksSearchQuery(e.target.value)}
+                    className="pl-10"
+                    data-testid="input-search-links"
+                  />
+                </div>
               </div>
 
               <Card>
@@ -691,18 +714,30 @@ export default function Admin() {
                 </div>
               ) : links && links.length > 0 ? (
                 <div className="space-y-4">
-                  {links.map((link) => (
+                  {links
+                    .filter(
+                      (link) =>
+                        link.title.toLowerCase().includes(linksSearchQuery.toLowerCase()) ||
+                        link.url.toLowerCase().includes(linksSearchQuery.toLowerCase()) ||
+                        link.description?.toLowerCase().includes(linksSearchQuery.toLowerCase())
+                    )
+                    .map((link, index) => (
                     <Card key={link.id}>
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary font-semibold">
+                            {index + 1}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold line-clamp-1">{link.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1">{link.url}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-1 hover:line-clamp-none cursor-pointer" title={link.url}>
+                              {link.url}
+                            </p>
                             {link.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{link.description}</p>
+                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{link.description}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
