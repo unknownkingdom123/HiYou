@@ -97,19 +97,41 @@ export default function Chat() {
   const handleDownload = async (pdf: Pdf) => {
     try {
       const token = localStorage.getItem("clgbooks-token");
-      const response = await fetch(`/api/pdfs/${pdf.id}/download`, {
+      
+      // Record download
+      const recordResponse = await fetch(`/api/pdfs/${pdf.id}/download`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
+      if (!recordResponse.ok) {
         throw new Error("Download failed");
       }
 
-      // Trigger actual download
-      window.open(`/api/pdfs/${pdf.id}/file`, "_blank");
+      // Fetch file with auth header
+      const fileResponse = await fetch(`/api/pdfs/${pdf.id}/file`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!fileResponse.ok) {
+        throw new Error("File download failed");
+      }
+
+      // Create blob and download
+      const blob = await fileResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${pdf.title}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       toast({
         title: "Download Started",
