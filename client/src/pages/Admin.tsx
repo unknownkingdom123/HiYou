@@ -360,6 +360,12 @@ export default function Admin() {
             <Badge variant="secondary" className="hidden sm:inline-flex">Admin</Badge>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/chat">
+              <Button data-testid="button-open-chat">
+                <Bot className="h-4 w-4 mr-2" />
+                Ask Bot
+              </Button>
+            </Link>
             <ThemeToggle />
             <Button 
               variant="ghost" 

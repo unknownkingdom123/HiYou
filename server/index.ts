@@ -69,6 +69,15 @@ app.use((req, res, next) => {
     await initializeDatabase();
   }
 
+  // Initialize database storage if available
+  const db = (global as any).db;
+  if (db) {
+    console.log("✓ Using database-backed storage");
+    const { DatabaseStorage } = await import("./db-storage");
+    const dbStorage = new DatabaseStorage(db);
+    (global as any).dbStorage = dbStorage;
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

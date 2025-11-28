@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage as defaultStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
@@ -12,6 +12,9 @@ import type { User } from "@shared/schema";
 const JWT_SECRET = process.env.SESSION_SECRET || "clgbooks-secret-key";
 const JWT_EXPIRES_IN = "7d";
 const REMEMBER_ME_EXPIRES_IN = "30d";
+
+// Storage instance - will be updated when database is initialized
+let storage: any = defaultStorage;
 
 // Extend Express Request type
 declare global {
@@ -89,6 +92,12 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Initialize database storage if available
+  const dbStorage = (global as any).dbStorage;
+  if (dbStorage) {
+    storage = dbStorage;
+  }
+
   // ============= AUTH ROUTES =============
 
   // Signup
