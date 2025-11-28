@@ -46,6 +46,7 @@ export default function Login() {
         throw new Error(result.message || "Login failed");
       }
 
+      // Login to context first
       login(result.user, result.token);
       
       toast({
@@ -53,19 +54,20 @@ export default function Login() {
         description: "You have been logged in successfully.",
       });
 
-      // Redirect based on user role
-      if (result.user.isAdmin) {
-        setLocation("/admin");
-      } else {
-        setLocation("/dashboard");
-      }
+      // Add a small delay to ensure state updates before redirect
+      setTimeout(() => {
+        if (result.user.isAdmin) {
+          setLocation("/admin");
+        } else {
+          setLocation("/dashboard");
+        }
+      }, 300);
     } catch (error) {
       toast({
         title: "Login Failed",
         description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
