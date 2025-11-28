@@ -394,7 +394,7 @@ export default function Admin() {
                   <Form {...pdfForm}>
                     <form onSubmit={pdfForm.handleSubmit((data) => uploadPdfMutation.mutate(data))} className="space-y-6">
                       {/* File Upload */}
-                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                      <div className="border-2 border-dashed border-border rounded-lg p-4 sm:p-8 text-center">
                         <input
                           type="file"
                           accept=".pdf"
@@ -600,7 +600,7 @@ export default function Admin() {
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="p-12 text-center">
+                  <CardContent className="p-6 sm:p-12 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No PDFs Found</h3>
                     <p className="text-muted-foreground">
@@ -769,7 +769,7 @@ export default function Admin() {
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="p-12 text-center">
+                  <CardContent className="p-6 sm:p-12 text-center">
                     <Link2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No External Links</h3>
                     <p className="text-muted-foreground">Add external book sources for users</p>
@@ -848,7 +848,7 @@ export default function Admin() {
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="p-12 text-center">
+                  <CardContent className="p-6 sm:p-12 text-center">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Users Found</h3>
                     <p className="text-muted-foreground">

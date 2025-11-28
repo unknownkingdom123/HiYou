@@ -104,12 +104,12 @@ export default function Login() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username (MIS NO.)</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input 
-                            placeholder="Enter your MIS number" 
+                            placeholder="Enter your USERNAME" 
                             className="pl-10 font-mono"
                             data-testid="input-username"
                             {...field} 
