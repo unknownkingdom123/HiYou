@@ -365,7 +365,11 @@ export async function registerRoutes(
   app.post("/api/chat", authMiddleware, async (req, res) => {
     try {
       const { message } = req.body;
-      const userId = (req as any).userId;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       // Get all PDFs and external links
       const allPdfs = await storage.getAllPdfs();
