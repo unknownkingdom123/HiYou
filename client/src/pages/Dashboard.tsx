@@ -232,7 +232,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <Card>
-              <CardContent className="p-12 text-center">
+              <CardContent className="p-6 sm:p-12 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mx-auto mb-4">
                   <FileText className="h-8 w-8 text-muted-foreground" />
                 </div>
