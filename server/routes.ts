@@ -399,9 +399,6 @@ export async function registerRoutes(
       );
       const topLinks = linkResults.slice(0, 3);
 
-      // Log search
-      await storage.logUserDownload(userId, `search: ${message}`);
-
       // Build response message
       let responseMessage = "";
       if (topPdfs.length === 0 && topLinks.length === 0) {
@@ -460,7 +457,10 @@ export async function registerRoutes(
       // Increment user download count
       await storage.incrementUserDownloads(req.user!.id);
 
-      res.json({ message: "Download recorded" });
+      // Get updated user to return count
+      const user = await storage.getUser(req.user!.id);
+
+      res.json({ message: "Download recorded", totalDownloads: user?.totalDownloads || 0 });
     } catch (error) {
       console.error("Record download error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -539,10 +539,14 @@ export async function registerRoutes(
           return res.status(400).json({ message: "PDF file is required" });
         }
 
+        if (!title) {
+          return res.status(400).json({ message: "Title is required" });
+        }
+
         const tagsArray = tags ? tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [];
 
         const pdf = await storage.createPdf({
-          title,
+          title: title || "Untitled",
           author: author || null,
           category: category || null,
           description: description || null,
@@ -554,7 +558,7 @@ export async function registerRoutes(
         res.status(201).json(pdf);
       } catch (error) {
         console.error("Upload PDF error:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: error instanceof Error ? error.message : "Internal server error" });
       }
     }
   );
