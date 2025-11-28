@@ -118,7 +118,7 @@ export default function Signup() {
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input 
-                            placeholder="Enter your MIS number (e.g., 2024001)" 
+                            placeholder="Enter your MIS number (e.g., 6125xxxxx)" 
                             className="pl-10 font-mono"
                             data-testid="input-username"
                             {...field} 
