@@ -101,7 +101,7 @@ export default function Login() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="misNo"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Username</FormLabel>
@@ -111,7 +111,7 @@ export default function Login() {
                           <Input 
                             placeholder="Enter your USERNAME" 
                             className="pl-10 font-mono"
-                            data-testid="input-misNo"
+                            data-testid="input-username"
                             {...field} 
                           />
                         </div>
